@@ -1,6 +1,6 @@
-// =============================
-//  ESP32 SLAVE (Sincronizado)
-// =============================
+// ===================================
+//  ESP32 SLAVE (Código Corregido)
+// ===================================
 #include <Wire.h>
 #include <MPU6050_tockn.h>
 #include <esp_now.h>
@@ -18,11 +18,13 @@ int idx = 0;
 bool midiendo = false;
 
 // --- Buffer para datos ---
-#define BUFFER_SIZE 250
+// Un buffer de 150 es suficiente para un JSON y el salto de línea.
+#define BUFFER_SIZE 150
 char dataBuffer[BUFFER_SIZE];
 
-// Dirección MAC del MASTER (cambiar por la real)
-uint8_t masterAddress[] = {00:00:00:00:00:00};
+// Dirección MAC del MASTER (¡DEBES CAMBIARLA POR LA REAL!)
+// La encontrarás en el monitor serie del Master al iniciarse.78:1C:3C:DB:E2:90
+uint8_t masterAddress[] = {0x78, 0x1C, 0x3C, 0xDB, 0xE2, 0x90}; // Ejemplo: usa la MAC real de tu Master
 
 // --- Funciones ---
 void obtenerAnguloTotal();
@@ -40,6 +42,9 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t *data, int data_len
     else if (memcmp(data, "STOP", 4) == 0) {
       midiendo = false;
       Serial.println("⏹ [SLAVE] Medición detenida.");
+      // Confirmar al MASTER que el SLAVE terminó de enviar
+      esp_now_send(masterAddress, (uint8_t*)"DONE", 4);
+      Serial.println("✅ [SLAVE] DONE enviado al MASTER.");
     }
     else if (memcmp(data, "CALIBRAR", 8) == 0) {
       recalibrarMPU();
@@ -90,10 +95,16 @@ void loop() {
     doc["time"] = millis() - tiempoInicio;
     doc["angle"] = anguloTotal;
 
-    // Serializar y enviar por ESP-NOW
-    size_t len = serializeJson(doc, dataBuffer, sizeof(dataBuffer));
-    if (len > 0) {
-      esp_now_send(masterAddress, (uint8_t*)dataBuffer, len);
+    // Serializar a un buffer temporal para añadir el salto de línea
+    char jsonBuffer[100];
+    size_t len = serializeJson(doc, jsonBuffer);
+    
+    // Preparar el paquete final con el salto de línea
+    int packet_len = snprintf(dataBuffer, BUFFER_SIZE, "%s\n", jsonBuffer);
+
+    // Enviar por ESP-NOW si se creó correctamente
+    if (packet_len > 0) {
+      esp_now_send(masterAddress, (uint8_t*)dataBuffer, packet_len);
     }
 
     idx++;
