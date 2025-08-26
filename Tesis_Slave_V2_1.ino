@@ -19,7 +19,7 @@ bool midiendo = false;
 
 // --- Buffer para datos ---
 // Un buffer de 150 es suficiente para un JSON y el salto de línea.
-#define BUFFER_SIZE 150
+#define BUFFER_SIZE 8192
 char dataBuffer[BUFFER_SIZE];
 
 // Dirección MAC del MASTER (¡DEBES CAMBIARLA POR LA REAL!)
@@ -108,7 +108,7 @@ void loop() {
     }
 
     idx++;
-    delay(20); // 50Hz
+    delay(200); // 50Hz
   }
 }
 
