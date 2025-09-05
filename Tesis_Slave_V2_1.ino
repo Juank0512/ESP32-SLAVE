@@ -22,7 +22,7 @@ bool midiendo = false;
 #define BUFFER_SIZE 8192
 char dataBuffer[BUFFER_SIZE];
 
-// Dirección MAC del MASTER (¡DEBES CAMBIARLA POR LA REAL!)
+// Dirección MAC del MASTER 
 // La encontrarás en el monitor serie del Master al iniciarse.78:1C:3C:DB:E2:90
 uint8_t masterAddress[] = {0x78, 0x1C, 0x3C, 0xDB, 0xE2, 0x90}; // Ejemplo: usa la MAC real de tu Master
 
